@@ -202,6 +202,9 @@ source ~/.bashrc</code></pre>
     <div class="step-box">
         <h3>1. สร้าง Controller Node (Laptop/หุ่นยนต์)</h3>
         <p>สร้างไฟล์ <code>water_bot_controller.py</code> เพื่อคำนวณพิกัดจากค่า Intensity:</p>
+        <p>คุณควรสร้างไฟล์ Python ใหม่ในโฟลเดอร์ script ของคุณ เพื่อไม่ให้ไปปนกับระบบหลักของ Linorobot2:
+
+ไฟล์ใหม่: ~/bot_ws/src/linorobot2/linorobot2_navigation/scripts/water_bot_controller.py</p>
         <pre><code># โลจิกสำคัญ:
 if scan.intensities[i] > 200:
     target_range = scan.ranges[i]
@@ -229,6 +232,7 @@ void irrigation_callback(const void * m) {
 
 </body>
 </html>
+
 
 
 
