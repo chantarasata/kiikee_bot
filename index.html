@@ -445,7 +445,30 @@ def main(args=None):
         rclpy.shutdown()
 
 if __name__ == '__main__':
-    main()</code></pre>
+    main()
+                
+2. อธิบายส่วนสำคัญของโค้ด:
+Target Selection: โค้ดจะวนลูปหาจุดที่สะท้อนแสงแรงที่สุด (max_intensity) หากมีค่าเกิน 200 มันจะล็อคตำแหน่งนั้นเป็นเป้าหมายทันที
+
+Proportional Control (แบบง่าย): * ถ้ามุม (angle) ไม่ตรง มันจะสั่งหมุนก่อน
+
+ถ้ามุมตรงแล้ว มันจะสั่งวิ่งเข้าหาด้วยความเร็ว linear_speed
+
+Watering Logic: เมื่อถึงระยะ stop_distance (40 ซม.) หุ่นจะหยุดสนิท และส่งข้อความ True ไปที่ Topic /irrigation เพื่อบอก ESP32 ให้เปิดรีเลย์ และค้างไว้ตามเวลา watering_time
+
+Safety: เมื่อปิดปั๊มแล้ว มีฟังก์ชัน back_up() ให้หุ่นถอยหลังออกมานิดหน่อย เพื่อป้องกันไม่ให้ LiDAR กลับไปล็อคท่อเดิมทันที (ลดโอกาสเกิด Loop ซ้ำซ้อน)
+
+3. วิธีการใช้งาน (Setup Steps):
+สร้างไฟล์: นำโค้ดไปวางใน ~/bot_ws/src/linorobot2/linorobot2_navigation/scripts/water_bot_control.py
+
+ให้สิทธิ์การรัน (Permission):
+
+Bash
+chmod +x ~/bot_ws/src/linorobot2/linorobot2_navigation/scripts/water_bot_control.py
+รันคำสั่ง: หลังจากรัน bringup.launch.py บนหุ่นยนต์แล้ว ให้รันสคริปต์นี้บน Laptop:
+
+Bash
+ros2 run linorobot2_navigation water_bot_control.py</code></pre>
             </div>
         </div>
 
@@ -471,6 +494,7 @@ ros2 topic pub /irrigation std_msgs/msg/Bool "{data: false}" -1</code></pre>
 
 </body>
 </html>
+
 
 
 
