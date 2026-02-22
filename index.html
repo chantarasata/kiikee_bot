@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linorobot2 Complete Guide & Cheat Sheet</title>
+    <title>Linorobot2 Master Documentation & SLAM Tips</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -11,33 +11,36 @@
             --dark: #1e293b;
             --light: #f8fafc;
             --accent: #f59e0b;
+            --success: #10b981;
         }
         body { font-family: 'Inter', system-ui, -apple-system, sans-serif; line-height: 1.6; color: var(--dark); max-width: 1000px; margin: 0 auto; padding: 40px 20px; background: #f1f5f9; }
         h1 { color: var(--primary); font-size: 2.5rem; text-align: center; border-bottom: 4px solid var(--primary); padding-bottom: 20px; }
-        h2 { color: var(--dark); margin-top: 40px; border-left: 6px solid var(--secondary); padding-left: 15px; background: #fff; padding-top: 10px; padding-bottom: 10px; }
-        h3 { color: var(--primary); border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; }
+        h2 { color: var(--dark); margin-top: 40px; border-left: 6px solid var(--secondary); padding-left: 15px; background: #fff; padding-top: 10px; padding-bottom: 10px; border-radius: 0 8px 8px 0; }
+        h3 { color: var(--primary); border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-top: 20px; }
         
         pre { background: #0f172a; color: #f1f5f9; padding: 20px; border-radius: 12px; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         code { color: #38bdf8; font-family: 'Fira Code', monospace; }
         
         .card { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 30px; border: 1px solid #e2e8f0; }
         
-        table { width: 100%; border-collapse: collapse; margin: 25px 0; background: white; border-radius: 12px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #e2e8f0; }
         th { background-color: var(--primary); color: white; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; }
         tr:hover { background-color: #f8fafc; }
         
-        .cheat-sheet-row { background-color: #f0fdf4 !important; font-weight: 600; }
-        .badge { background: var(--accent); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; }
+        .badge { background: var(--accent); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .badge-both { background: var(--success); }
+
+        .tip-box { background: #fffbeb; border-left: 6px solid var(--accent); padding: 15px; margin: 10px 0; border-radius: 4px; }
+        .tip-title { font-weight: bold; color: #92400e; display: block; margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
-    <h1>🚀 Linorobot2 Master Documentation</h1>
+    <h1>🤖 Linorobot2 Documentation & SLAM Guide</h1>
 
     <div class="card">
-        <h2>📋 สรุปคำสั่งที่ใช้บ่อย (Cheat Sheet)</h2>
-        <p>ใช้สำหรับตรวจสอบสถานะและแก้ไขปัญหาเบื้องต้นจาก Laptop</p>
+        <h2>📊 สรุปคำสั่งที่ใช้บ่อย (Cheat Sheet)</h2>
         <table>
             <thead>
                 <tr>
@@ -47,89 +50,68 @@
                 </tr>
             </thead>
             <tbody>
-                <tr class="cheat-sheet-row">
+                <tr>
                     <td><code>ros2 topic list</code></td>
                     <td>ดู Topic ทั้งหมดที่ทำงานอยู่</td>
                     <td><span class="badge">Laptop</span></td>
                 </tr>
-                <tr class="cheat-sheet-row">
+                <tr>
                     <td><code>ros2 topic hz /scan</code></td>
                     <td>เช็คความเร็วการส่งข้อมูลของ LiDAR</td>
                     <td><span class="badge">Laptop</span></td>
                 </tr>
-                <tr class="cheat-sheet-row">
+                <tr>
                     <td><code>ros2 topic echo /odom</code></td>
                     <td>ดูค่าตำแหน่งพิกัด X, Y ของหุ่น</td>
                     <td><span class="badge">Laptop</span></td>
                 </tr>
-                <tr class="cheat-sheet-row">
+                <tr>
                     <td><code>ros2 run tf2_tools view_frames</code></td>
                     <td>ดูความสัมพันธ์ของแกนต่างๆ (TF Tree)</td>
                     <td><span class="badge">Laptop</span></td>
                 </tr>
-                <tr class="cheat-sheet-row">
+                <tr>
                     <td><code>hostname -I</code></td>
                     <td>ดูหมายเลข IP ของเครื่อง</td>
-                    <td><span class="badge">ทั้งคู่ (Both)</span></td>
+                    <td><span class="badge badge-both">ทั้งคู่ (Both)</span></td>
                 </tr>
             </tbody>
         </table>
     </div>
 
     <div class="card">
-        <h2>🏗️ 1. วิเคราะห์โครงสร้าง (URDF & XACRO)</h2>
-        <p>ไฟล์เก็บค่าพารามิเตอร์ทางกายภาพของหุ่นยนต์:</p>
-        <pre><code># เข้าไปดู DNA ของหุ่นยนต์
-cat ~/bot_ws/src/linorobot2/linorobot2_description/urdf/2wd_properties.urdf.xacro</code></pre>
-        <ul>
-            <li><b>Wheel Track:</b> 0.31 เมตร (ระยะห่างล้อ)</li>
-            <li><b>Wheel Radius:</b> 0.0325 เมตร (ล้อขนาด 6.5 ซม.)</li>
-        </ul>
-    </div>
-
-    <div class="card">
-        <h2>🌐 2. การตั้งค่าระบบเครือข่าย (Network Setup)</h2>
-        <h3>สำหรับเครื่อง Laptop (Virtual Machine)</h3>
-        <p>ต้องเปลี่ยน Network Mode เป็น <b>Bridged Adapter</b> เพื่อให้หุ่นยนต์และ Laptop มองเห็นกัน</p>
-        <pre><code># ตั้งค่าใน ~/.bashrc ทั้งหุ่นยนต์และ Laptop
-export ROS_DOMAIN_ID=0
-source ~/.bashrc</code></pre>
-    </div>
-
-    <div class="card">
-        <h2>🗺️ 3. การทำแผนที่ (SLAM Implementation)</h2>
-        <p>ทำตามลำดับหน้าต่าง Terminal ดังนี้:</p>
+        <h2>✨ เคล็ดลับการวาดแผนที่ให้สวยและแม่นยำ (SLAM Tips)</h2>
         
-        <h3>[Terminal 1] - บนหุ่นยนต์</h3>
+        <div class="tip-box">
+            <span class="tip-title">🐢 ขับช้าๆ (Go Slow)</span>
+            อย่าสะบัดหรือหมุนหุ่นยนต์เร็วเกินไป เพราะ <code>slam_toolbox</code> ต้องการเวลาในการประมวลผลเพื่อเปรียบเทียบจุดเลเซอร์ใหม่กับแผนที่เดิม หากหมุนเร็วเกินไปแผนที่อาจจะ "หลุด" หรือซ้อนทับกันผิดพลาดได้
+        </div>
+
+        <div class="tip-box">
+            <span class="tip-title">🔄 การปิดลูป (Loop Closure)</span>
+            เมื่อขับสำรวจจนทั่วห้องแล้ว ให้พยายามขับหุ่นยนต์กลับมายังจุดเริ่มต้น (จุดเดิม) ระบบจะตรวจจับได้ว่าเป็นพื้นที่ที่เคยผ่านมาแล้ว และจะทำการปรับจูน (Optimize) แผนที่ทั้งฉบับให้ตรงและเชื่อมต่อกันอย่างสมบูรณ์
+        </div>
+
+        <div class="tip-box">
+            <span class="tip-title">📐 เน้นขอบและมุม (Focus on Corners)</span>
+            พยายามขับหุ่นยนต์ให้เซนเซอร์มองเห็นมุมห้องหรือขอบประตูชัดๆ ข้อมูลจากมุมห้องเปรียบเสมือนหมุดยึดทางเรขาคณิตที่ช่วยให้ระบบคำนวณการหมุน (Rotation) ได้แม่นยำขึ้น ลดโอกาสที่แผนที่ จะ "เบี้ยว" หรือ "เอียง"
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🛠️ ลำดับการรันระบบ (Operations)</h2>
+        <h3>1. เริ่มต้นระบบ (หุ่นยนต์)</h3>
         <pre><code>ros2 launch linorobot2_bringup bringup.launch.py</code></pre>
 
-        <h3>[Terminal 2] - บน Laptop (รัน SLAM)</h3>
+        <h3>2. เริ่มกระบวนการ SLAM (Laptop)</h3>
         <pre><code>ros2 launch linorobot2_navigation slam.launch.py</code></pre>
 
-        <h3>[Terminal 3] - บน Laptop (บังคับหุ่น)</h3>
-        <pre><code>ros2 run teleop_twist_keyboard teleop_twist_keyboard</code></pre>
-
-        <h3>[Terminal 4] - บน Laptop (แสดงผล)</h3>
-        <pre><code>rviz2</code></pre>
+        <h3>3. ควบคุมและแสดงผล (Laptop)</h3>
+        <p>เปิด <code>rviz2</code> และ <code>teleop_twist_keyboard</code> เพื่อเริ่มวาดแผนที่</p>
     </div>
 
-    <div class="card">
-        <h2>💾 4. การบันทึกแผนที่ (Saving Map)</h2>
-        <p>เมื่อวาดเสร็จแล้ว ให้บันทึกไฟล์แผนที่เพื่อนำไปใช้ในระบบนำทางอัตโนมัติ (Navigation):</p>
-        <pre><code>ros2 run nav2_map_server map_saver_cli -f ~/my_map</code></pre>
-    </div>
-
-    <div class="card" style="border-top: 8px solid var(--accent);">
-        <h2>⚠️ ข้อควรระวัง (Troubleshooting)</h2>
-        <ul>
-            <li>หาก <code>ros2 topic list</code> ไม่ขึ้น ให้ลองปิด Firewall: <code>sudo ufw disable</code></li>
-            <li>หากจุดเลเซอร์ใน RViz ไม่แสดง ให้เปลี่ยน Reliability Policy เป็น <b>Best Effort</b></li>
-            <li>ตรวจสอบ IP Address เสมอด้วย <code>hostname -I</code> เพื่อความมั่นใจในการเชื่อมต่อ</li>
-        </ul>
-    </div>
-
-    <footer style="text-align: center; margin-top: 50px; color: #64748b; font-size: 0.9rem;">
-        <p>Documentation created for Linorobot2 Project &copy; 2026</p>
+    <footer style="text-align: center; margin-top: 50px; color: #64748b; font-size: 0.9rem; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+        <p>สร้างขึ้นเพื่อโปรเจกต์ Linorobot2 | 2026</p>
     </footer>
 
 </body>
