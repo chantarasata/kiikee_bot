@@ -263,6 +263,103 @@ void irrigation_callback(const void * m) {
 </body>
 </html>
 
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        .code-header { background: #334155; color: #fff; padding: 10px 15px; border-radius: 8px 8px 0 0; font-weight: bold; font-size: 0.9rem; display: flex; justify-content: space-between; }
+        .logic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        @media (max-width: 768px) { .logic-grid { grid-template-columns: 1fr; } }
+        .highlight-green { color: #10b981; font-weight: bold; }
+        .highlight-blue { color: #3b82f6; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="card" style="border-top: 8px solid #14b8a6;">
+        <h2>📡 ระบบสื่อสารสั่งการรดน้ำ (Irrigation Communication)</h2>
+        <p>การสร้างการเชื่อมต่อระหว่าง <b>Node ประมวลผล (Laptop)</b> และ <b>Controller (ESP32)</b> ผ่าน Topic <code>/irrigation</code></p>
+
+        <div class="logic-grid">
+            <div>
+                <h3>1. ฝั่งผู้รับ: ESP32 (Micro-ROS Subscriber)</h3>
+                <p>ทำหน้าที่รอฟังคำสั่ง <code>True/False</code> เพื่อขับ Relay</p>
+                <div class="code-header"><span>firmware.cpp</span><span class="badge">C++</span></div>
+                <pre><code>// 1. ประกาศตัวแปร Global
+rcl_subscription_t irrigation_sub;
+std_msgs__msg__Bool irrigation_msg;
+
+// 2. ฟังก์ชัน Callback เมื่อได้รับข้อมูล
+void irrigation_callback(const void * msvin) {
+  const std_msgs__msg__Bool * msg = (const std_msgs__msg__Bool *)msvin;
+  // ถ้า data เป็น true ให้ส่งไฟออกขา RELAY_PIN
+  digitalWrite(RELAY_PIN, msg->data ? HIGH : LOW);
+}
+
+// 3. เริ่มต้นในฟังก์ชัน setup()
+// (หลังจาก init node และ executor แล้ว)
+rclc_subscription_init_default(
+  &irrigation_sub, &node,
+  ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool),
+  "irrigation"
+);
+
+rclc_executor_add_subscription(
+  &executor, &irrigation_sub, &irrigation_msg,
+  &irrigation_callback, ON_NEW_DATA
+);</code></pre>
+            </div>
+
+            <div>
+                <h3>2. ฝั่งผู้ส่ง: Laptop (Python Publisher)</h3>
+                <p>ทำหน้าที่ส่งคำสั่งเมื่อ LiDAR ตรวจพบเป้าหมาย</p>
+                <div class="code-header"><span>water_controller.py</span><span class="badge">Python</span></div>
+                <pre><code>import rclpy
+from std_msgs.msg import Bool
+
+# 1. สร้าง Publisher ใน __init__
+self.pump_pub = self.create_publisher(
+    Bool, 
+    'irrigation', 
+    10
+)
+
+# 2. ฟังก์ชันสั่งเปิด-ปิดน้ำ
+def control_pump(self, status: bool):
+    msg = Bool()
+    msg.data = status
+    self.pump_pub.publish(msg)
+    self.get_logger().info(f'ส่งคำสั่งปั๊ม: {status}')
+
+# เรียกใช้: self.control_pump(True)</code></pre>
+            </div>
+        </div>
+
+        <div class="tip-box" style="background: #f0fdfa; border-left-color: #14b8a6;">
+            <span class="tip-title">🧪 วิธีการทดสอบโดยไม่ต้องเขียนโค้ด (Manual Test)</span>
+            <p>เมื่ออัปโหลด Firmware ลง ESP32 เรียบร้อยแล้ว ให้ลองพิมพ์คำสั่งนี้ใน Terminal ของ Laptop:</p>
+            <pre><code># สั่งเปิดน้ำ (ส่ง True ครั้งเดียว)
+ros2 topic pub /irrigation std_msgs/msg/Bool "{data: true}" -1
+
+# สั่งปิดน้ำ (ส่ง False ครั้งเดียว)
+ros2 topic pub /irrigation std_msgs/msg/Bool "{data: false}" -1</code></pre>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🛠️ รายละเอียดการเชื่อมต่อ Hardware</h2>
+        <ul>
+            <li><span class="highlight-blue">Signal:</span> ขา GPIO ของ ESP32 (เช่น PIN 15) ต่อเข้ากับขา <b>IN</b> ของ Relay Module</li>
+            <li><span class="highlight-green">Power:</span> ต่อไฟเลี้ยง VCC/GND ให้ Relay แยกจากมอเตอร์เพื่อป้องกันสัญญาณรบกวน (Inductive Spike)</li>
+            <li><span class="highlight-blue">Logic:</span> ตรวจสอบว่า Relay ของคุณเป็นแบบ <b>Active High</b> หรือ <b>Active Low</b> (ถ้าตรงข้ามกันให้แก้ในโค้ด C++)</li>
+        </ul>
+    </div>
+
+</body>
+</html>
+
+
 
 
 
