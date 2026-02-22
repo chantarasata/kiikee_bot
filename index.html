@@ -239,8 +239,7 @@ if scan.intensities[i] > 200:
         <ul>คุณต้องแก้ไขไฟล์ Firmware ใน ESP32 เพื่อให้รับคำสั่ง "รดน้ำ" ได้:</ul>
 
 <li>ตำแหน่งไฟล์:~/linorobot2_hardware/firmware/src/firmware.cpp</li>
-<li>สิ่งที่ต้องเพิ่ม: 1. สร้าง Subscriber ตัวใหม่เพื่อรับค่า std_msgs/msg/Bool (ชื่อ Topic เช่น /irrigation)</li>
-<li>2. เขียนฟังก์ชันให้ถ้าได้รับค่า True -> สั่งให้ขา Digital Pin (ที่ต่อกับ Relay) เป็น HIGH</li>
+
 
 สิ่งที่ต้องเพิ่ม: 1. สร้าง Subscriber ตัวใหม่เพื่อรับค่า std_msgs/msg/Bool (ชื่อ Topic เช่น /irrigation)
 2. เขียนฟังก์ชันให้ถ้าได้รับค่า True -> สั่งให้ขา Digital Pin (ที่ต่อกับ Relay) เป็น HIGH</ul>
@@ -263,6 +262,7 @@ void irrigation_callback(const void * m) {
 
 </body>
 </html>
+
 
 
 
