@@ -315,24 +315,137 @@ rclc_executor_add_subscription(
                 <h3>2. ฝั่งผู้ส่ง: Laptop (Python Publisher)</h3>
                 <p>ทำหน้าที่ส่งคำสั่งเมื่อ LiDAR ตรวจพบเป้าหมาย</p>
                 <div class="code-header"><span>water_controller.py</span><span class="badge">Python</span></div>
-                <pre><code>import rclpy
+                <pre><code>#!/usr/bin/env python3
+
+import rclpy
+from rclpy.node import Node
+from sensor_msgs.msg import LaserScan
+from geometry_msgs.msg import Twist
 from std_msgs.msg import Bool
+import time
 
-# 1. สร้าง Publisher ใน __init__
-self.pump_pub = self.create_publisher(
-    Bool, 
-    'irrigation', 
-    10
-)
+class WaterBotController(Node):
+    def __init__(self):
+        super().__init__('water_bot_controller')
 
-# 2. ฟังก์ชันสั่งเปิด-ปิดน้ำ
-def control_pump(self, status: bool):
-    msg = Bool()
-    msg.data = status
-    self.pump_pub.publish(msg)
-    self.get_logger().info(f'ส่งคำสั่งปั๊ม: {status}')
+        # --- Parameters ---
+        self.intensity_threshold = 200.0  # ค่าความเข้มแสงที่สะท้อนจากเทปสะท้อนแสง
+        self.stop_distance = 0.4          # ระยะหยุดรดน้ำ (เมตร)
+        self.watering_time = 5.0          # ระยะเวลารดน้ำ (วินาที)
+        self.linear_speed = 0.15          # ความเร็วเดินหน้า (m/s)
+        self.angular_speed = 0.4          # ความเร็วการหมุน (rad/s)
 
-# เรียกใช้: self.control_pump(True)</code></pre>
+        # --- Variables ---
+        self.is_watering = False
+
+        # --- Publishers & Subscribers ---
+        # รับข้อมูลจาก LiDAR
+        self.scan_sub = self.create_subscription(LaserScan, '/scan', self.scan_callback, 10)
+        
+        # ส่งคำสั่งควบคุมความเร็วหุ่นยนต์
+        self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
+        
+        # ส่งคำสั่งเปิด/ปิดปั๊มน้ำไปยัง ESP32
+        self.pump_pub = self.create_publisher(Bool, '/irrigation', 10)
+
+        self.get_logger().info('Water Bot Controller Started: Searching for reflective targets...')
+
+    def scan_callback(self, scan):
+        if self.is_watering:
+            return # ถ้ากำลังรดน้ำอยู่ ให้หยุดการประมวลผลการเคลื่อนที่
+
+        target_found = False
+        target_angle = 0.0
+        target_range = 0.0
+        
+        # ค้นหาจุดที่มีค่า Intensity สูงที่สุด (เป้าหมายสะท้อนแสง)
+        max_intensity = 0.0
+        for i in range(len(scan.intensities)):
+            if scan.intensities[i] > self.intensity_threshold:
+                if scan.intensities[i] > max_intensity:
+                    max_intensity = scan.intensities[i]
+                    target_range = scan.ranges[i]
+                    target_angle = scan.angle_min + (i * scan.angle_increment)
+                    target_found = True
+
+        if target_found:
+            self.navigate_to_target(target_range, target_angle)
+        else:
+            self.stop_robot()
+
+    def navigate_to_target(self, distance, angle):
+        msg = Twist()
+
+        # 1. ตรวจสอบระยะหยุด (Stop & Water)
+        if distance <= self.stop_distance:
+            self.stop_robot()
+            self.start_watering()
+            return
+
+        # 2. ควบคุมทิศทาง (Alignment)
+        # ถ้ามุมเบี่ยงเกิน 0.1 rad ให้หมุนตัวก่อน
+        if abs(angle) > 0.1:
+            msg.linear.x = 0.0
+            msg.angular.z = self.angular_speed if angle > 0 else -self.angular_speed
+            self.get_logger().info(f'Aligning to target: {angle:.2f} rad')
+        else:
+            # 3. เดินหน้าเข้าหาเป้าหมาย
+            msg.linear.x = self.linear_speed
+            msg.angular.z = 0.0
+            self.get_logger().info(f'Moving to target: {distance:.2f} m')
+
+        self.cmd_pub.publish(msg)
+
+    def start_watering(self):
+        self.get_logger().info('Target reached! Starting irrigation...')
+        self.is_watering = True
+        
+        # ส่งคำสั่งเปิดปั๊มน้ำไปยัง ESP32
+        pump_msg = Bool()
+        pump_msg.data = True
+        self.pump_pub.publish(pump_msg)
+
+        # รอเวลารดน้ำ (แบบ Simple Blocking)
+        time.sleep(self.watering_time)
+
+        # ส่งคำสั่งปิดปั๊มน้ำ
+        pump_msg.data = False
+        self.pump_pub.publish(pump_msg)
+        
+        self.get_logger().info('Irrigation finished. Moving to next target...')
+        
+        # ถอยหลังออกมาเล็กน้อย เพื่อให้ LiDAR เห็นภาพรวมกว้างขึ้น (ตัวเลือกเสริม)
+        self.back_up()
+        
+        self.is_watering = False
+
+    def back_up(self):
+        msg = Twist()
+        msg.linear.x = -0.1
+        self.cmd_pub.publish(msg)
+        time.sleep(2.0)
+        self.stop_robot()
+
+    def stop_robot(self):
+        msg = Twist()
+        msg.linear.x = 0.0
+        msg.angular.z = 0.0
+        self.cmd_pub.publish(msg)
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = WaterBotController()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.stop_robot()
+        node.destroy_node()
+        rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()</code></pre>
             </div>
         </div>
 
@@ -358,6 +471,7 @@ ros2 topic pub /irrigation std_msgs/msg/Bool "{data: false}" -1</code></pre>
 
 </body>
 </html>
+
 
 
 
