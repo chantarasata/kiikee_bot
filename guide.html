@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Linorobot2 Complete Guide</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; background: #f4f7f9; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #2980b9; margin-top: 30px; background: #e8f4fd; padding: 10px; border-left: 5px solid #3498db; }
+        h3 { color: #d35400; }
+        code { background: #2d3436; color: #fab1a0; padding: 2px 5px; border-radius: 4px; font-family: 'Courier New', Courier, monospace; }
+        pre { background: #2d3436; color: #dfe6e9; padding: 15px; border-radius: 8px; overflow-x: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .note { background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; background: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #3498db; color: white; }
+        .step-box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <h1>🤖 คู่มือการจัดการระบบ Linorobot2 (Hardware to SLAM)</h1>
+    <p>สรุปขั้นตอนการตั้งค่า ตรวจสอบโครงสร้าง และการทำแผนที่อย่างละเอียด</p>
+
+    <div class="step-box">
+        <h2>1. การวิเคราะห์โครงสร้างหุ่นยนต์ (URDF)</h2>
+        <p>ตรวจสอบ "DNA" ของหุ่นยนต์ผ่านไฟล์ XACRO:</p>
+        <pre>cat ~/bot_ws/src/linorobot2/linorobot2_description/urdf/2wd_properties.urdf.xacro</pre>
+        <ul>
+            <li><b>wheel_radius:</b> รัศมีล้อ (0.0325 m = 6.5 cm diameter)</li>
+            <li><b>wheel_separation:</b> ระยะห่างล้อซ้าย-ขวา (0.31 m)</li>
+            <li><b>laser_pose:</b> ตำแหน่ง LiDAR เยื้องหน้า 7cm สูงจากพื้น 12cm</li>
+        </ul>
+    </div>
+
+    <div class="step-box">
+        <h2>2. การตั้งค่าระบบเครือข่าย (Multi-Machine)</h2>
+        <p>เชื่อมต่อ Laptop (VM) เข้ากับหุ่นยนต์ผ่าน WiFi:</p>
+        <h3>ฝั่ง Laptop (VM):</h3>
+        <ul>
+            <li>ตั้งค่า VM Network เป็น <b>Bridged Adapter</b></li>
+            <li>ตั้งค่า Domain ID ใน <code>~/.bashrc</code>:</li>
+        </ul>
+        <pre>export ROS_DOMAIN_ID=0
+source ~/.bashrc</pre>
+        <p>ตรวจสอบการเชื่อมต่อ: <code>ros2 topic list</code> (ต้องเห็น /scan, /odom)</p>
+    </div>
+
+    <div class="step-box">
+        <h2>3. ลำดับการรันระบบ (Operations)</h2>
+        <table>
+            <tr>
+                <th>ขั้นตอน</th>
+                <th>คำสั่ง</th>
+                <th>เครื่องที่รัน</th>
+            </tr>
+            <tr>
+                <td>1. เปิด Hardware</td>
+                <td><code>ros2 launch linorobot2_bringup bringup.launch.py</code></td>
+                <td>หุ่นยนต์</td>
+            </tr>
+            <tr>
+                <td>2. เริ่ม SLAM</td>
+                <td><code>ros2 launch linorobot2_navigation slam.launch.py</code></td>
+                <td>Laptop</td>
+            </tr>
+            <tr>
+                <td>3. ควบคุมหุ่น</td>
+                <td><code>ros2 run teleop_twist_keyboard teleop_twist_keyboard</code></td>
+                <td>Laptop</td>
+            </tr>
+            <tr>
+                <td>4. ดูผลกราฟิก</td>
+                <td><code>rviz2</code></td>
+                <td>Laptop</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="step-box">
+        <h2>4. การทำแผนที่ (SLAM) และการบันทึก</h2>
+        <h3>ขั้นตอนการทำ:</h3>
+        <ol>
+            <li>เปิด <b>RViz2</b> ตั้งค่า Fixed Frame เป็น <code>map</code></li>
+            <li>Add -> <b>Map</b> (Topic: /map)</li>
+            <li>บังคับหุ่นเดินช้าๆ ให้ทั่วห้องเพื่อเก็บข้อมูลจุดเลเซอร์</li>
+            <li>เมื่อได้แผนที่ครบถ้วน ให้ใช้คำสั่งบันทึก:</li>
+        </ol>
+        <pre>ros2 run nav2_map_server map_saver_cli -f ~/map_name</pre>
+    </div>
+
+    <div class="step-box">
+        <h2>5. การจัดการ Firmware (Microcontroller)</h2>
+        <p>โค้ดที่รันบน ESP32:</p>
+        <ul>
+            <li><b>ที่อยู่โค้ด:</b> <code>~/linorobot2_hardware/firmware</code></li>
+            <li><b>หัวใจสำคัญ:</b> ไฟล์ <code>config/lino_base_config.h</code> ใช้ปรับค่า PID และ Encoder</li>
+            <li><b>คำสั่ง Upload:</b> <code>pio run -t upload</code></li>
+        </ul>
+    </div>
+
+    <div class="note">
+        <b>💡 ข้อควรจำ:</b> หากใช้ VM แล้วมองไม่เห็น Topic ให้เช็คว่า Firewall ปิดอยู่หรือไม่ด้วยคำสั่ง <code>sudo ufw disable</code>
+    </div>
+
+    <p style="text-align: center; color: #95a5a6; margin-top: 50px;">Generated by Gemini AI - Robot Assistant 2026</p>
+</body>
+</html>
