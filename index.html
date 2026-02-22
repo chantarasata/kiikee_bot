@@ -216,8 +216,15 @@ if scan.intensities[i] > 200:
             <li>ในไฟล์ Python คุณต้องสร้าง Callback function เพื่อรับค่าจาก Topic /scan:</li>
             <li> ตรวจสอบอาร์เรย์ intensities ในข้อความ LaserScan</li>
             <li> หาตำแหน่ง Index ที่มีค่ามากกว่า 200</li>
-            </ul>
-<p></p>คำนวณหาค่าเฉลี่ยของกลุ่มจุด (Cluster) เพื่อให้ได้ "จุดกึ่งกลางท่อ"</p>
+            
+<li>คำนวณหาค่าเฉลี่ยของกลุ่มจุด (Cluster) เพื่อให้ได้ "จุดกึ่งกลางท่อ"</li>
+                </ul>
+            <ul><b>ส่วนที่ 2: การคำนวณระยะและทิศทาง</b>
+                <p?ใช้หลักการตรีโกณมิติพื้นฐาน:</p>
+            <li>ระยะ (Range): อ่านได้โดยตรงจาก ranges[index]</li>
+            <li>มุม (Angle): คำนวณจาก angle_min + (index * angle_increment)</li>
+
+                </ul>
         </div>
 
     <div class="step-box">
@@ -242,6 +249,7 @@ void irrigation_callback(const void * m) {
 
 </body>
 </html>
+
 
 
 
