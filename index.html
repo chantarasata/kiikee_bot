@@ -212,11 +212,11 @@ if scan.intensities[i] > 200:
     </div>
         <div class="step-box">
             <h3>2. รายละเอียด Logic ที่ต้องเขียน (Python ROS2 Node)</h3>
-            <p><b>ส่วนที่ 1: การคัดกรองค่า Intensity (Filtering)</b></p>
-            <p>ในไฟล์ Python คุณต้องสร้าง Callback function เพื่อรับค่าจาก Topic /scan:</p>
-            <p> ตรวจสอบอาร์เรย์ intensities ในข้อความ LaserScan</p>
-            <p> หาตำแหน่ง Index ที่มีค่ามากกว่า 200</p>
-
+            <ul><b>ส่วนที่ 1: การคัดกรองค่า Intensity (Filtering)</b>
+            <li>ในไฟล์ Python คุณต้องสร้าง Callback function เพื่อรับค่าจาก Topic /scan:</li>
+            <li> ตรวจสอบอาร์เรย์ intensities ในข้อความ LaserScan</li>
+            <li> หาตำแหน่ง Index ที่มีค่ามากกว่า 200</li>
+            </ul>
 <p></p>คำนวณหาค่าเฉลี่ยของกลุ่มจุด (Cluster) เพื่อให้ได้ "จุดกึ่งกลางท่อ"</p>
         </div>
 
@@ -242,6 +242,7 @@ void irrigation_callback(const void * m) {
 
 </body>
 </html>
+
 
 
 
