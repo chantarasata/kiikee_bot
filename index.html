@@ -146,9 +146,21 @@ source ~/.bashrc</code></pre>
         <pre><code>ros2 run nav2_map_server map_saver_cli -f ~/my_room_map</code></pre>
     </div>
 
+    <div class="card" style="border-top: 5px solid #6366f1;">
+    <h2>🔄 เทคนิคล้อจำลอง (Virtual Encoder / Open Loop Feedback)</h2>
+    <p>กรณีใช้มอเตอร์ลอยตัวเพื่อส่งสัญญาณ Odometry สำหรับรถระบบ Open Loop:</p>
+    <div class="tip-box">
+        <span class="tip-title">⚙️ การปรับตั้งค่า (Calibration)</span>
+        ให้ปรับค่า <code>wheel_radius</code> ในไฟล์ <code>2wd_properties.urdf.xacro</code> ให้สอดคล้องกับระยะทางที่ล้อขับเคลื่อนจริงเคลื่อนที่ได้ โดยใช้สูตร: <br>
+        <code>Distance = (Ticks / Ticks_per_Rev) * 2 * π * Wheel_Radius</code>
+    </div>
+    <p><b>ข้อควรระวัง:</b> วิธีนี้อาจเกิด Drift สูงเนื่องจากไม่มีโหลดที่ล้อ Encoder แนะนำให้เปิดใช้งาน <b>IMU Fusion</b> ใน EKF เพื่อช่วยแก้ค่าการหมุนให้ตรงความเป็นจริง</p>
+</div>
+
     <footer style="text-align: center; margin-top: 50px; color: #64748b; font-size: 0.9rem; border-top: 1px solid #e2e8f0; padding-top: 20px;">
         <p>Documentation created for Linorobot2 Project | 2026</p>
     </footer>
 
 </body>
 </html>
+
