@@ -210,15 +210,24 @@ if scan.intensities[i] > 200:
     target_range = scan.ranges[i]
     target_angle = scan.angle_min + (i * scan.angle_increment)</code></pre>
     </div>
+        <div class="step-box">
+            <h3>2. รายละเอียด Logic ที่ต้องเขียน (Python ROS2 Node)</h3>
+            <p>ในไฟล์ Python คุณต้องสร้าง Callback function เพื่อรับค่าจาก Topic /scan:</p>
+            <p> ตรวจสอบอาร์เรย์ intensities ในข้อความ LaserScan</p>
+            <p> หาตำแหน่ง Index ที่มีค่ามากกว่า 200</p>
+
+<p></p>คำนวณหาค่าเฉลี่ยของกลุ่มจุด (Cluster) เพื่อให้ได้ "จุดกึ่งกลางท่อ"</p>
+        </div>
 
     <div class="step-box">
-        <h3>2. แก้ไข Firmware (ESP32)</h3>
+        <h3>3. แก้ไข Firmware (ESP32)</h3>
         <p>เพิ่มการประกาศขา Relay และตัวรับสัญญาณ (Subscriber):</p>
         <pre><code>#define RELAY_PIN 15 // ขาที่ต่อกับ Relay ปั๊มน้ำ
 void irrigation_callback(const void * m) {
     digitalWrite(RELAY_PIN, HIGH); // เปิดปั๊ม
 }</code></pre>
     </div>
+        
 
     <div class="tip-box">
         <span class="tip-title">⚠️ ข้อควรระวังในการทดสอบ</span>
@@ -232,6 +241,7 @@ void irrigation_callback(const void * m) {
 
 </body>
 </html>
+
 
 
 
